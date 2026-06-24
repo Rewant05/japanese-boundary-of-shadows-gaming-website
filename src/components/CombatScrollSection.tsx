@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { siteData } from '../config/siteData'
@@ -7,13 +7,15 @@ gsap.registerPlugin(ScrollTrigger)
 
 export default function CombatScrollSection() {
   const root = useRef<HTMLElement>(null); const track = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
+  useEffect(() => {
+    let ctx: gsap.Context | undefined
+    const start = () => { ctx = gsap.context(() => {
       if (matchMedia('(prefers-reduced-motion: reduce), (max-width: 760px)').matches) return
       gsap.to(track.current, { xPercent: -75, ease: 'none', scrollTrigger: { trigger: root.current, start: 'top top', end: '+=4000', pin: true, scrub: 1, invalidateOnRefresh: true } })
       gsap.to('.combat-progress i', { scaleX: 1, ease: 'none', scrollTrigger: { trigger: root.current, start: 'top top', end: '+=4000', scrub: true } })
-    }, root)
-    return () => ctx.revert()
+    }, root) }
+    const idle = ('requestIdleCallback' in window ? window.requestIdleCallback(start, { timeout: 1200 }) : setTimeout(start, 1)) as number
+    return () => { if ('cancelIdleCallback' in window) window.cancelIdleCallback(idle); else clearTimeout(idle); ctx?.revert() }
   }, [])
   return <section className="combat" ref={root}>
     <div className="section-stamp"><span>戦闘</span><b>COMBAT SYSTEM</b></div>

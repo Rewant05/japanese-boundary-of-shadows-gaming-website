@@ -48,6 +48,14 @@ export function NewsPage() {
   </motion.main>
 }
 
+export function AboutPage() {
+  return <main className="inner-page about-page"><PageHero index="05" eyebrow="ABOUT US / 会社情報" title="境界の先を、\nつくる人々。" copy="物語と技術で、まだ見ぬ世界を切り拓くゲームスタジオ。" />
+    <section className="about-intro"><small>OUR PHILOSOPHY</small><h2>心に残るのは、<br />遊び終えた後の記憶だ。</h2><p>KUROGANE INTERACTIVEは、東京を拠点とする独立系ゲームスタジオです。日本の伝承と現代都市の感覚を融合し、プレイヤー自身の選択が物語になる体験をつくっています。</p></section>
+    <section className="about-values"><article><span>01</span><h3>物語を、体験に。</h3><p>語られる物語ではなく、プレイヤーの操作と決断から生まれる物語を設計します。</p></article><article><span>02</span><h3>美しさに、意味を。</h3><p>映像、音楽、動きのすべてを世界観と結びつけ、理由のある美しさを追求します。</p></article><article><span>03</span><h3>境界を、越えて。</h3><p>職種や文化の壁を越え、異なる視点が衝突する場所から新しい遊びを生み出します。</p></article></section>
+    <section className="company-profile"><header><small>STUDIO PROFILE</small><h2>会社概要</h2></header><dl><div><dt>会社名</dt><dd>KUROGANE INTERACTIVE</dd></div><div><dt>所在地</dt><dd>{siteData.address}</dd></div><div><dt>設立</dt><dd>2022年 4月</dd></div><div><dt>事業内容</dt><dd>ゲームソフトウェアの企画・開発・運営</dd></div><div><dt>お問い合わせ</dt><dd><Link href="/contact">お問い合わせフォームへ</Link></dd></div></dl></section>
+  </main>
+}
+
 export function ContactPage() {
   const [sent, setSent] = useState(false)
   return <main className="inner-page"><PageHero index="05" eyebrow="CONTACT / お問い合わせ" title="境界通信局。" copy="ゲーム、取材、サポートに関するお問い合わせ。" />
@@ -81,3 +89,6 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
     <section className="legal-content"><header><span>制定日：2026年3月1日</span><span>最終改定日：2026年6月1日</span></header>{sections.map((s, i) => <article key={s[0]}><span>{String(i + 1).padStart(2, '0')}</span><div><h2>{s[0]}</h2><p>{s[1]}</p></div></article>)}<article><span>{String(sections.length + 1).padStart(2, '0')}</span><div><h2>お問い合わせ先</h2><p>{siteData.studio}<br />{siteData.address}<br /><a href={`mailto:${siteData.email}`}>{siteData.email}</a></p></div></article></section>
   </main>
 }
+
+export function PrivacyPage() { return <LegalPage type="privacy" /> }
+export function TermsPage() { return <LegalPage type="terms" /> }

@@ -1,19 +1,69 @@
 import { useLayoutEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Link from './Link'
 
-gsap.registerPlugin(ScrollTrigger)
+type Gsap = typeof import('gsap').default
 
-export default function CinematicScrollExperience() {
+let gsapReady: Promise<Gsap> | undefined
+
+const loadGsap = () => {
+  gsapReady ??= Promise.all([
+    import('gsap'),
+    import('gsap/ScrollTrigger'),
+  ]).then(([gsapModule, triggerModule]) => {
+    const gsap = gsapModule.default
+    gsap.registerPlugin(triggerModule.ScrollTrigger)
+    return gsap
+  })
+  return gsapReady
+}
+
+export default function CinematicScrollExperience({ active = true }: { active?: boolean }) {
   const root = useRef<HTMLElement>(null)
   useLayoutEffect(() => {
-    if (!root.current) return
-    const ctx = gsap.context(() => {
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-      if (reduce) return
-      const mobile = matchMedia('(max-width: 760px)').matches
-      const tl = gsap.timeline({ scrollTrigger: { trigger: root.current, start: 'top top', end: mobile ? '+=2300' : '+=3500', pin: true, scrub: 1, invalidateOnRefresh: true } })
+    if (!active || !root.current) return
+    const current = root.current
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) return
+    const mobile = matchMedia('(max-width: 760px)').matches
+    if (mobile) {
+      const animations: Animation[] = []
+      const moon = current.querySelector<HTMLElement>('.moon')
+      const keyArt = current.querySelector<HTMLElement>('.scene-key-art')
+      if (moon) {
+        moon.style.opacity = '.58'
+        moon.style.transform = 'scale(1)'
+      }
+      current.querySelectorAll<HTMLElement>('.hero-title .char').forEach((char, index) => {
+        animations.push(char.animate([
+          { opacity: 0, transform: 'translateY(75%)' },
+          { opacity: 1, transform: 'translateY(0)' },
+        ], { delay: index * 55, duration: 700, easing: 'cubic-bezier(.215,.61,.355,1)', fill: 'backwards' }))
+      })
+      current.querySelectorAll<HTMLElement>('.hero-kicker, .hero-subtitle').forEach((line, index) => {
+        animations.push(line.animate([
+          { opacity: 0, transform: 'translateY(18px)' },
+          { opacity: 1, transform: 'translateY(0)' },
+        ], { delay: 250 + index * 100, duration: 500, easing: 'ease-out', fill: 'backwards' }))
+      })
+      const parallax = () => {
+        if (!keyArt) return
+        const progress = Math.min(1, Math.max(0, window.scrollY / current.offsetHeight))
+        keyArt.style.transform = `translateY(${progress * 4}%) scale(${1 + progress * .035})`
+      }
+      parallax()
+      window.addEventListener('scroll', parallax, { passive: true })
+      return () => {
+        window.removeEventListener('scroll', parallax)
+        animations.forEach((animation) => animation.cancel())
+        if (keyArt) keyArt.style.transform = ''
+      }
+    }
+    let cancelled = false
+    let ctx: { revert: () => void } | undefined
+    loadGsap().then((gsap) => {
+      if (cancelled || !root.current) return
+      ctx = gsap.context(() => {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: root.current, start: 'top top', end: '+=3500', pin: true, scrub: 1, invalidateOnRefresh: true } })
       tl.fromTo('.moon', { scale: .55, opacity: 0 }, { scale: 1, opacity: .75, duration: 1.4 })
         .from('.hero-title .char', { yPercent: 110, rotateX: -80, opacity: 0, stagger: .1, duration: 1.2 }, .2)
         .from('.hero-kicker, .hero-subtitle', { clipPath: 'inset(0 100% 0 0)', duration: .9 }, .75)
@@ -31,16 +81,21 @@ export default function CinematicScrollExperience() {
         .from('.reveal-panel', { clipPath: 'inset(0 0 100% 0)', xPercent: (i) => i ? 20 : -20, stagger: .15, duration: 1 }, 2.8)
         .from('.reveal-number', { yPercent: 80, opacity: 0, duration: .7 }, 3)
         .to('.reveal-stage', { opacity: 0, scale: 1.08, duration: .8 }, 4.1)
-        .to('.scene', { filter: 'brightness(.35)', duration: .8 }, 4.1)
+        .to('.scene-dim', { opacity: .72, duration: .8 }, 4.1)
         .from('.intro-final', { opacity: 0, yPercent: 20, duration: .8 }, 4.3)
         .from('.intro-final .action', { clipPath: 'inset(0 100% 0 0)', stagger: .15, duration: .6 }, 4.45)
-    }, root)
-    return () => ctx.revert()
-  }, [])
+      }, root)
+    })
+    return () => {
+      cancelled = true
+      ctx?.revert()
+    }
+  }, [active])
 
   return <section className="cinematic-intro" ref={root}>
     <div className="scene">
       <div className="scene-key-art" />
+      <div className="scene-dim" />
       <div className="moon" /><div className="moon-ray" />
       <div className="city">{Array.from({ length: 12 }, (_, i) => <i key={i} className="city-shape" style={{ height: `${18 + (i % 5) * 8}%` }} />)}</div>
       <div className="shrine"><i /><i /><i /></div>

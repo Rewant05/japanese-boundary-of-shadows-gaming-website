@@ -17,6 +17,7 @@ export const siteData = {
     { label: '登場人物', path: '/characters' },
     { label: '世界観', path: '/world' },
     { label: 'ニュース', path: '/news' },
+    { label: '会社情報', path: '/about' },
     { label: 'お問い合わせ', path: '/contact' },
   ],
   characters: [

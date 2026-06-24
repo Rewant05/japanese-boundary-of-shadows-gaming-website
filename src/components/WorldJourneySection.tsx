@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { siteData } from '../config/siteData'
@@ -7,13 +7,18 @@ gsap.registerPlugin(ScrollTrigger)
 
 export default function WorldJourneySection() {
   const root = useRef<HTMLElement>(null)
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  useEffect(() => {
+    let ctx: gsap.Context | undefined
+    const start = () => { ctx = gsap.context(() => {
+      if (matchMedia('(prefers-reduced-motion: reduce), (max-width: 760px)').matches) {
+        gsap.set('.journey-path', { strokeDashoffset: 0 })
+        return
+      }
       gsap.fromTo('.journey-path', { strokeDashoffset: 1650 }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: root.current, start: 'top 70%', end: 'bottom 60%', scrub: 1 } })
       gsap.utils.toArray<HTMLElement>('.location').forEach((el) => gsap.from(el, { opacity: 0, x: el.classList.contains('right') ? 70 : -70, clipPath: 'inset(0 0 100% 0)', scrollTrigger: { trigger: el, start: 'top 75%', end: 'top 45%', scrub: 1 } }))
-    }, root)
-    return () => ctx.revert()
+    }, root) }
+    const idle = ('requestIdleCallback' in window ? window.requestIdleCallback(start, { timeout: 1200 }) : setTimeout(start, 1)) as number
+    return () => { if ('cancelIdleCallback' in window) window.cancelIdleCallback(idle); else clearTimeout(idle); ctx?.revert() }
   }, [])
   return <section className="journey" ref={root}>
     <header><span>世界</span><small>WORLD ARCHIVE / 05 LOCATIONS</small><h2>記憶を辿る、<br />境界への旅。</h2></header>

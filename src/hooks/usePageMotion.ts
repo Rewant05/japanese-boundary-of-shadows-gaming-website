@@ -11,7 +11,7 @@ export function usePageMotion(root: RefObject<HTMLElement | null>, page: MotionP
     if (!root.current) return
 
     const ctx = gsap.context(() => {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      if (window.matchMedia('(prefers-reduced-motion: reduce), (max-width: 760px)').matches) return
 
       const hero = root.current!.querySelector('.page-hero')
       gsap.to('.page-moon', {
@@ -81,14 +81,15 @@ export function usePageMotion(root: RefObject<HTMLElement | null>, page: MotionP
 
       if (page === 'news') {
         gsap.from('.news-filter button', {
-          x: -45, opacity: 0, stagger: .09,
+          x: -45, stagger: .09,
           scrollTrigger: { trigger: '.news-filter', start: 'top 85%', end: 'bottom 65%', scrub: .6 },
         })
         gsap.utils.toArray<HTMLElement>('.news-list > article').forEach((item, index) => {
+          gsap.set([item, ...Array.from(item.children)], { opacity: 1 })
           const tl = gsap.timeline({ scrollTrigger: { trigger: item, start: 'top 92%', end: 'center 68%', scrub: .65 } })
-          tl.from(item, { x: index % 2 ? 90 : -90, clipPath: index % 2 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)', opacity: .15 })
-            .from(item.querySelector('span'), { scale: 1.8, opacity: 0 }, .12)
-            .from(item.querySelectorAll('h2, p, div, i'), { y: 24, opacity: 0, stagger: .04 }, .18)
+          tl.from(item, { x: index % 2 ? 90 : -90, clipPath: index % 2 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' })
+            .from(item.querySelector('span'), { scale: 1.35 }, .12)
+            .from(item.querySelectorAll('h2, p, div, i'), { y: 24, stagger: .04 }, .18)
         })
       }
     }, root)

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { siteData } from '../config/siteData'
@@ -7,8 +7,9 @@ gsap.registerPlugin(ScrollTrigger)
 
 export default function CharacterStackSection() {
   const root = useRef<HTMLElement>(null)
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
+  useEffect(() => {
+    let ctx: gsap.Context | undefined
+    const start = () => { ctx = gsap.context(() => {
       if (matchMedia('(prefers-reduced-motion: reduce), (max-width: 760px)').matches) return
       const cards = gsap.utils.toArray<HTMLElement>('.character-card')
       gsap.set(cards, { zIndex: (i) => cards.length - i })
@@ -18,8 +19,9 @@ export default function CharacterStackSection() {
       cards.slice(0, -1).forEach((card, i) => {
         timeline.to(card, { yPercent: -115, xPercent: i % 2 ? 8 : -8, rotate: i % 2 ? 5 : -5, scale: .88, opacity: 0, ease: 'none', duration: 1 }, i)
       })
-    }, root)
-    return () => ctx.revert()
+    }, root) }
+    const idle = ('requestIdleCallback' in window ? window.requestIdleCallback(start, { timeout: 1200 }) : setTimeout(start, 1)) as number
+    return () => { if ('cancelIdleCallback' in window) window.cancelIdleCallback(idle); else clearTimeout(idle); ctx?.revert() }
   }, [])
   return <section className="character-stack" ref={root}>
     <div className="stack-pin">
